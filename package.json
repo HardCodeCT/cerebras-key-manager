@@ -1,21 +1,8 @@
 {
-  "name": "cerebras-api-key-manager",
+  "name": "cerebras-key-manager",
   "version": "1.0.0",
-  "description": "Server-side API key rotation and rate limiting for Cerebras AI",
   "type": "module",
   "engines": {
     "node": ">=18.x"
-  },
-  "scripts": {
-    "dev": "vercel dev",
-    "deploy": "vercel --prod"
-  },
-  "keywords": [
-    "cerebras",
-    "api-key-management",
-    "rate-limiting",
-    "vercel"
-  ],
-  "author": "Your Name",
-  "license": "MIT"
+  }
 }
