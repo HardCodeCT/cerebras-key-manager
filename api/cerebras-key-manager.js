@@ -1,29 +1,33 @@
-// Cerebras API Key Manager with Per-Minute Rate Limiting
-// Deploy to Vercel at: /api/cerebras-key
+// ============================================================================
+// CEREBRAS API KEY MANAGER - Ready to Deploy
+// ============================================================================
+// 
+// INSTRUCTIONS:
+// 1. Replace the placeholder keys below with your real Cerebras API keys
+// 2. Get keys from: https://cloud.cerebras.ai/
+// 3. Keep this file in: api/cerebras-key.js
+// 4. Deploy to Vercel
+//
+// ============================================================================
 
+// 👇 PASTE YOUR CEREBRAS API KEYS HERE (Get them from https://cloud.cerebras.ai/)
 let keysData = {
   keys: [
     {
-      key: "YOUR_CEREBRAS_API_KEY_1",
+      key: "REPLACE_WITH_YOUR_FIRST_KEY_HERE",  // 👈 Key 1: Paste your first csk-xxxxx key
       name: "Primary Key",
       active: true,
-      
-      // Daily limits
       dailyTokenLimit: 1000000,
       tokensUsedToday: 0,
-      
-      // Per-minute limits
       requestsPerMinute: 30,
       tokensPerMinute: 60000,
-      
-      // Tracking
       currentMinuteRequests: 0,
       currentMinuteTokens: 0,
       lastMinuteReset: new Date().toISOString(),
       lastDayReset: new Date().toISOString()
     },
     {
-      key: "YOUR_CEREBRAS_API_KEY_2",
+      key: "REPLACE_WITH_YOUR_SECOND_KEY_HERE",  // 👈 Key 2: Paste your second csk-xxxxx key
       name: "Backup Key 1",
       active: true,
       dailyTokenLimit: 1000000,
@@ -36,7 +40,7 @@ let keysData = {
       lastDayReset: new Date().toISOString()
     },
     {
-      key: "YOUR_CEREBRAS_API_KEY_3",
+      key: "REPLACE_WITH_YOUR_THIRD_KEY_HERE",  // 👈 Key 3: Paste your third csk-xxxxx key
       name: "Backup Key 2",
       active: true,
       dailyTokenLimit: 1000000,
@@ -48,8 +52,14 @@ let keysData = {
       lastMinuteReset: new Date().toISOString(),
       lastDayReset: new Date().toISOString()
     }
+    // 💡 TIP: Add 2-3 more keys here for better performance!
+    // Just copy the block above and paste it here, then update the key value
   ]
 };
+
+// ============================================================================
+// SERVER LOGIC - Don't modify below unless you know what you're doing
+// ============================================================================
 
 function needsDayReset(lastResetStr) {
   const lastReset = new Date(lastResetStr);
@@ -64,19 +74,17 @@ function needsMinuteReset(lastResetStr) {
   const lastReset = new Date(lastResetStr);
   const now = new Date();
   const diffMs = now - lastReset;
-  return diffMs >= 60000; // 60 seconds
+  return diffMs >= 60000;
 }
 
 function resetKeyCounters(keyObj) {
   const now = new Date().toISOString();
   
-  // Reset daily counters if needed
   if (needsDayReset(keyObj.lastDayReset)) {
     keyObj.tokensUsedToday = 0;
     keyObj.lastDayReset = now;
   }
   
-  // Reset per-minute counters if needed
   if (needsMinuteReset(keyObj.lastMinuteReset)) {
     keyObj.currentMinuteRequests = 0;
     keyObj.currentMinuteTokens = 0;
@@ -90,10 +98,8 @@ function findAvailableKey() {
   for (let keyObj of keysData.keys) {
     if (!keyObj.active) continue;
 
-    // Reset counters if needed
     resetKeyCounters(keyObj);
 
-    // Check all limits
     const hasRequestCapacity = keyObj.currentMinuteRequests < keyObj.requestsPerMinute;
     const hasTokenCapacity = keyObj.currentMinuteTokens < keyObj.tokensPerMinute;
     const hasDailyCapacity = keyObj.tokensUsedToday < keyObj.dailyTokenLimit;
@@ -105,7 +111,6 @@ function findAvailableKey() {
 
   if (availableKeys.length === 0) return null;
 
-  // Sort by least used (daily tokens)
   availableKeys.sort((a, b) => a.tokensUsedToday - b.tokensUsedToday);
   return availableKeys[0];
 }
@@ -125,12 +130,11 @@ export default function handler(req, res) {
   }
 
   try {
-    // ROUTE 1: GET /api/cerebras-key - Get available key
+    // ROUTE 1: GET /api/cerebras-key
     if (req.method === 'GET' && !req.query.action) {
       const selectedKey = findAvailableKey();
 
       if (!selectedKey) {
-        // Find when next reset occurs
         let nextResetTime = new Date(Date.UTC(
           new Date().getUTCFullYear(),
           new Date().getUTCMonth(),
@@ -138,7 +142,6 @@ export default function handler(req, res) {
           0, 0, 0
         ));
 
-        // Check if any key will reset within a minute
         for (let keyObj of keysData.keys) {
           if (!keyObj.active) continue;
           const minuteReset = new Date(keyObj.lastMinuteReset);
@@ -151,11 +154,11 @@ export default function handler(req, res) {
         return res.status(503).json({ 
           error: 'All API keys exhausted or rate limited',
           nextResetTime: nextResetTime.toISOString(),
-          retryAfter: Math.ceil((nextResetTime - new Date()) / 1000) // seconds
+          retryAfter: Math.ceil((nextResetTime - new Date()) / 1000)
         });
       }
 
-      console.log(`Providing key: ${selectedKey.name} - Requests: ${selectedKey.currentMinuteRequests}/30, Tokens/min: ${selectedKey.currentMinuteTokens}/60000, Daily: ${selectedKey.tokensUsedToday}/1M`);
+      console.log(`Providing key: ${selectedKey.name} - Requests: ${selectedKey.currentMinuteRequests}/30, Daily: ${selectedKey.tokensUsedToday}/1M`);
 
       return res.status(200).json({
         key: selectedKey.key,
@@ -169,7 +172,7 @@ export default function handler(req, res) {
       });
     }
 
-    // ROUTE 2: POST /api/cerebras-key?action=confirm - Confirm usage
+    // ROUTE 2: POST /api/cerebras-key?action=confirm
     if (req.method === 'POST' && req.query.action === 'confirm') {
       const keyValue = req.query.key || req.body?.key;
       const tokensUsed = parseInt(req.query.tokens || req.body?.tokens || 0);
@@ -185,15 +188,13 @@ export default function handler(req, res) {
       const keyObj = findKeyByValue(keyValue);
       
       if (keyObj) {
-        // Reset counters if needed
         resetKeyCounters(keyObj);
         
-        // Update counters
         keyObj.currentMinuteRequests++;
         keyObj.currentMinuteTokens += tokensUsed;
         keyObj.tokensUsedToday += tokensUsed;
         
-        console.log(`✅ Confirmed: ${keyObj.name} - +${tokensUsed} tokens | Daily: ${keyObj.tokensUsedToday}/1M | Requests/min: ${keyObj.currentMinuteRequests}/30`);
+        console.log(`✅ Confirmed: ${keyObj.name} - +${tokensUsed} tokens | Daily: ${keyObj.tokensUsedToday}/1M`);
         
         return res.status(200).json({ 
           success: true,
@@ -209,7 +210,7 @@ export default function handler(req, res) {
       return res.status(404).json({ error: 'Key not found' });
     }
 
-    // ROUTE 3: POST /api/cerebras-key?action=failure - Report rate limit hit
+    // ROUTE 3: POST /api/cerebras-key?action=failure
     if (req.method === 'POST' && req.query.action === 'failure') {
       const keyValue = req.query.key || req.body?.key;
       const errorType = req.query.errorType || req.body?.errorType || 'rate_limit';
@@ -225,7 +226,6 @@ export default function handler(req, res) {
           keyObj.tokensUsedToday = keyObj.dailyTokenLimit;
           console.log(`❌ Daily limit hit: ${keyObj.name}`);
         } else if (errorType === 'rate_limit') {
-          // Max out current minute limits to force rotation
           keyObj.currentMinuteRequests = keyObj.requestsPerMinute;
           keyObj.currentMinuteTokens = keyObj.tokensPerMinute;
           console.log(`❌ Rate limit hit: ${keyObj.name}`);
@@ -244,7 +244,7 @@ export default function handler(req, res) {
       return res.status(404).json({ error: 'Key not found' });
     }
 
-    // ROUTE 4: GET /api/cerebras-key?action=stats - Get overall stats
+    // ROUTE 4: GET /api/cerebras-key?action=stats
     if (req.method === 'GET' && req.query.action === 'stats') {
       const stats = keysData.keys.map(k => {
         resetKeyCounters(k);
@@ -261,13 +261,12 @@ export default function handler(req, res) {
       return res.status(200).json({ stats });
     }
 
-    // Invalid request
     return res.status(400).json({ 
       error: 'Invalid request',
       usage: {
         getKey: 'GET /api/cerebras-key',
         confirmUsage: 'POST /api/cerebras-key?action=confirm&key=KEY&tokens=COUNT',
-        reportFailure: 'POST /api/cerebras-key?action=failure&key=KEY&errorType=rate_limit|daily_limit|error',
+        reportFailure: 'POST /api/cerebras-key?action=failure&key=KEY&errorType=rate_limit',
         getStats: 'GET /api/cerebras-key?action=stats'
       }
     });
