@@ -40,7 +40,7 @@ let keysData = {
       lastDayReset: new Date().toISOString()
     },
     {
-      key: "REPLACE_WITH_YOUR_THIRD_KEY_HERE",  // 👈 Key 3: Paste your third csk-xxxxx key
+      key: "csk-nwe926mpve4eevr32ej4tccw3e8hykrn6xr42htct499yt6j",  // 👈 Key 3: Paste your third csk-xxxxx key
       name: "Backup Key 2",
       active: true,
       dailyTokenLimit: 1000000,
