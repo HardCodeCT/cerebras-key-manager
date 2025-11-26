@@ -14,7 +14,7 @@
 let keysData = {
   keys: [
     {
-      key: "REPLACE_WITH_YOUR_FIRST_KEY_HERE",  // 👈 Key 1: Paste your first csk-xxxxx key
+      key: "csk-e5dmt28j2ef5nvhk3v58pnxjxmxcp9e99486cyp9e8dy9xf6",  // 👈 Key 1: Paste your first csk-xxxxx key
       name: "Primary Key",
       active: true,
       dailyTokenLimit: 1000000,
