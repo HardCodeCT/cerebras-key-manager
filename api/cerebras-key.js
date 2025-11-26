@@ -27,7 +27,7 @@ let keysData = {
       lastDayReset: new Date().toISOString()
     },
     {
-      key: "REPLACE_WITH_YOUR_SECOND_KEY_HERE",  // 👈 Key 2: Paste your second csk-xxxxx key
+      key: "csk-rwnf3wdvpvwnxv25x68d2kjwr9ertfk6d24t85ppj9vpem24",  // 👈 Key 2: Paste your second csk-xxxxx key
       name: "Backup Key 1",
       active: true,
       dailyTokenLimit: 1000000,
